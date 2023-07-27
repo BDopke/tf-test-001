@@ -49,7 +49,6 @@ data "aws_iam_policy_document" "policy_definition" {
   }
 }
 
-
 resource "aws_iam_policy" "policy" {
   name   = "pre-onboarding-validator-policy"
   policy = data.aws_iam_policy_document.policy_definition.json
