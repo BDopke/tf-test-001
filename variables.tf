@@ -15,9 +15,9 @@ variable "subnet_ids" {
 }
 
 variable "endpoints" {
-  type        = list(string)
-  description = "List of domain addresses (HTTP/S endpoints)"
-  default     = []
+  type        = string
+  description = "Comma-separated list of domain addresses (HTTP/S endpoints)"
+  default     = ""
 }
 
 variable "confluence_space" {

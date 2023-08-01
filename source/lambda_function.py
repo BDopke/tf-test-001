@@ -3,7 +3,7 @@ import requests
 from atlassian import Confluence
 
 
-ENDPOINTS = os.environ["ENDPOINTS"]
+ENDPOINTS = (os.environ["ENDPOINTS"]).split(",")
 CONFLUENCE_SPACE = os.environ["CONFLUENCE_SPACE"]
 CONFLUENCE_PARENT_PAGE_ID = os.environ["CONFLUENCE_PARENT_PAGE_ID"]
 
