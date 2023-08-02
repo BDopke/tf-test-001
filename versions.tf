@@ -6,3 +6,7 @@ terraform {
     archive = ">= 2.4.0"
   }
 }
+
+provider "aws" {
+  region = var.region
+}
