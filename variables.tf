@@ -3,15 +3,6 @@ variable "region" {
   description = "AWS Region (being set using environment variable TF_VAR_region)"
 }
 
-variable "access_key" {
-  type        = string
-  description = "AWS Region (being set using environment variable TF_VAR_region)"
-}
-
-variable "secret_key" {
-  type        = string
-  description = "AWS Region (being set using environment variable TF_VAR_region)"
-}
 variable "account_id" {
   type        = string
   description = "AWS Account ID"
