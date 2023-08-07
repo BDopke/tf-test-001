@@ -27,6 +27,7 @@ data "aws_iam_policy_document" "policy_definition" {
     resources = [
       "*"
     ]
+    effect = "Allow"
   }
 
   statement {
