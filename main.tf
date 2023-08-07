@@ -98,9 +98,9 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-resource "terraform_data" "invoke_lambda" {
+resource "null_resource" "invoke_lambda" {
   depends_on = [aws_lambda_function.lambda]
-  
+
   provisioner "local-exec" {
     command = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --log-type Tail --output json"
   }
