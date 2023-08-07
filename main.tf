@@ -97,3 +97,11 @@ resource "aws_lambda_function" "lambda" {
     subnet_ids         = var.subnet_ids
   }
 }
+
+resource "terraform_data" "invoke_lambda" {
+  depends_on = [aws_lambda_function.lambda]
+  
+  provisioner "local-exec" {
+    command = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --log-type Tail --output json"
+  }
+}
