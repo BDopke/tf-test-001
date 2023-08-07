@@ -45,4 +45,5 @@ variable "confluence_api_key" {
   type        = string
   description = "Confluence API key (being set using environment variable TF_VAR_confluence_api_key)"
   default     = null
+  sensitive   = true
 }
