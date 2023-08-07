@@ -38,6 +38,7 @@ data "aws_iam_policy_document" "policy_definition" {
     resources = [
       "arn:aws:logs:${var.region}:${var.account_id}:*"
     ]
+    effect = "Allow"
   }
 
   statement {
@@ -49,6 +50,7 @@ data "aws_iam_policy_document" "policy_definition" {
     resources = [
       "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/${aws_lambda_function.lambda.function_name}:*",
     ]
+    effect = "Allow"
   }
 }
 
