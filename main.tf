@@ -16,8 +16,10 @@ data "aws_iam_policy_document" "policy_definition" {
     sid = "AllowEC2"
     actions = [
       "ec2:CreateNetworkInterface",
+      "ec2:AttachNetworkInterface",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DeleteNetworkInterface",
+      "ec2:DescribeInstances",
       "ec2:DescribeSecurityGroups",
       "ec2:DescribeSubnets",
       "ec2:DescribeVpcs"
