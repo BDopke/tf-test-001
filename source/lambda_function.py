@@ -8,19 +8,22 @@ CONFLUENCE_SPACE = os.environ["CONFLUENCE_SPACE"]
 CONFLUENCE_PARENT_PAGE_ID = os.environ["CONFLUENCE_PARENT_PAGE_ID"]
 
 
-def ping_endpoint(endpoint: str) -> int:
+def ping_endpoint(endpoint: str):
     """Pings certain HTTP(s) endpoint.
 
     Args:
         endpoint (str): HTTP(s) endpoint
 
     Returns:
-        int: returns HTTP status code
+        int: returns HTTP status code or -1 in case of an error
     """
-    with requests.Session() as session:
-        request = session.get(endpoint, timeout=5)
-
-    return request.status_code
+    try:
+        with requests.Session() as session:
+            request = session.get(endpoint, timeout=2)
+        return request.status_code
+    except requests.exceptions.RequestException as err:
+        print(f"An error occurred while pinging {endpoint}: {err}")
+        return "Connection Error"
 
 
 def create_confluence_table(table_data):
@@ -30,7 +33,7 @@ def create_confluence_table(table_data):
         table_data: data to generate HTML table
 
     Returns:
-        _type_: returns HTML table
+        str: returns HTML table
     """
     html_table = "<table><tr><th>URL</th><th>HTTP Status Code</th></tr>"
     for row in table_data:
@@ -39,7 +42,7 @@ def create_confluence_table(table_data):
     return html_table
 
 
-def handler():
+def handler(event, context):
     confluence = Confluence(
         url=os.environ["CONFLUENCE_URL"],
         api_version="cloud",
@@ -49,20 +52,20 @@ def handler():
 
     table_data = []
     for endpoint in ENDPOINTS:
-        try:
-            status = ping_endpoint(endpoint)
-        except requests.exceptions.RequestException as exception:
-            print(exception)
-            continue
-        table_data.append([endpoint, status])
+        status_code = ping_endpoint(endpoint)
+        table_data.append([endpoint, status_code])
 
     table = create_confluence_table(table_data)
 
-    confluence.create_page(
-        space=CONFLUENCE_SPACE,
-        title="Pre-Transition Network Validation",
-        body=table,
-        parent_id=None
-        if CONFLUENCE_PARENT_PAGE_ID == ""
-        else CONFLUENCE_PARENT_PAGE_ID,
-    )
+    try:
+        page_response = confluence.create_page(
+            space=CONFLUENCE_SPACE,
+            title="Pre-Transition Network Validation",
+            body=table,
+            parent_id=None
+            if CONFLUENCE_PARENT_PAGE_ID == ""
+            else CONFLUENCE_PARENT_PAGE_ID,
+        )
+        print(page_response)
+    except Exception as e:
+        print(f"An error occurred while creating the Confluence page: {e}")
