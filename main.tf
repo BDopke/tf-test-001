@@ -1,75 +1,51 @@
-data "aws_iam_policy_document" "assume_role" {
+data "aws_iam_policy_document" "lambda_policy" {
   statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-data "aws_iam_policy_document" "policy_definition" {
-  statement {
-    sid = "AllowEC2"
-    actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:AttachNetworkInterface",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DeleteNetworkInterface",
-      "ec2:DescribeInstances",
-      "ec2:DescribeSecurityGroups",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeVpcs"
-    ]
-    resources = [
-      "*"
-    ]
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "LogsCreateLogGroup"
-    actions = [
-      "logs:CreateLogGroup"
-    ]
-    resources = [
-      "arn:aws:logs:${var.region}:${var.account_id}:*"
-    ]
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "LogPushLogs"
-    actions = [
+    actions   = [
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
+      ]
+    effect    = "Allow"
+    resources = ["arn:aws:logs:${var.region}:${var.account_id}:*"]
+  }
+
+  statement {
+    actions   = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DeleteNetworkInterface"
     ]
-    resources = [
-      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/${aws_lambda_function.lambda.function_name}:*",
-    ]
-    effect = "Allow"
+    effect   = "Allow"
+    resources = ["*"]
   }
 }
 
 resource "aws_iam_policy" "policy" {
   name   = "pre-onboarding-validator-policy"
-  policy = data.aws_iam_policy_document.policy_definition.json
-}
-
-resource "aws_iam_role_policy_attachment" "attachment" {
-  role       = aws_iam_role.role.name
-  policy_arn = aws_iam_policy.policy.arn
+  policy = data.aws_iam_policy_document.lambda_policy.json
 }
 
 resource "aws_iam_role" "role" {
   name               = "PreOnboardingValidatorRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attachment" {
+  policy_arn = aws_iam_policy.policy.arn
+  role       = aws_iam_role.role.name
 }
 
 data "archive_file" "package" {
+  depends_on = [ null_resource.install_packages ]
   type        = "zip"
   source_dir  = "source"
   output_path = "payload.zip"
@@ -107,6 +83,14 @@ resource "null_resource" "invoke_lambda" {
   depends_on = [aws_lambda_function.lambda]
 
   provisioner "local-exec" {
-    command = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --log-type Tail --output json"
+    interpreter = ["powershell"]
+    command     = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --invocation-type Event --log-type Tail --output json output.json"
+  }
+}
+
+resource "null_resource" "install_packages" {
+  provisioner "local-exec" {
+    interpreter = ["powershell"]
+    command     = "pip install -r requirements.txt -t source/"
   }
 }
