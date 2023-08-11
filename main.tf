@@ -83,14 +83,12 @@ resource "null_resource" "invoke_lambda" {
   depends_on = [aws_lambda_function.lambda]
 
   provisioner "local-exec" {
-    interpreter = ["powershell"]
     command     = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --invocation-type Event --log-type Tail --output json output.json"
   }
 }
 
 resource "null_resource" "install_packages" {
   provisioner "local-exec" {
-    interpreter = ["powershell"]
     command     = "pip install -r requirements.txt -t source/"
   }
 }
