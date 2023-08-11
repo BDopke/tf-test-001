@@ -3,7 +3,7 @@ import requests
 from atlassian import Confluence
 
 
-ENDPOINTS = (os.environ["ENDPOINTS"]).split(",")
+ENDPOINTS = (os.environ["ENDPOINTS"]).replace(" ","").split(",")
 CONFLUENCE_SPACE = os.environ["CONFLUENCE_SPACE"]
 CONFLUENCE_PARENT_PAGE_ID = os.environ["CONFLUENCE_PARENT_PAGE_ID"]
 
@@ -15,15 +15,16 @@ def ping_endpoint(endpoint: str):
         endpoint (str): HTTP(s) endpoint
 
     Returns:
-        int: returns HTTP status code or -1 in case of an error
+        int: returns HTTP status code or error
     """
     try:
         with requests.Session() as session:
-            request = session.get(endpoint, timeout=2)
-        return request.status_code
-    except requests.exceptions.RequestException as err:
-        print(f"An error occurred while pinging {endpoint}: {err}")
-        return "Connection Error"
+            request = session.get(endpoint, timeout=3)
+            return request.status_code
+    except requests.exceptions.Timeout:
+        return "Connection Timeout"        
+    except requests.exceptions.RequestException as e:
+        return f"Error: {str(e)}"
 
 
 def create_confluence_table(table_data):
@@ -52,9 +53,16 @@ def handler(event, context):
 
     table_data = []
     for endpoint in ENDPOINTS:
-        status_code = ping_endpoint(endpoint)
-        table_data.append([endpoint, status_code])
-
+        try:
+            request = requests.get(endpoint, timeout=2)
+            table_data.append([endpoint, request.status_code])
+        except requests.exceptions.Timeout:
+            table_data.append([endpoint, "Timeout"])
+            continue       
+        except requests.exceptions.RequestException as e:
+            table_data.append([endpoint, e])
+            continue  
+        
     table = create_confluence_table(table_data)
 
     try:
