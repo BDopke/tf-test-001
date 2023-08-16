@@ -89,6 +89,6 @@ resource "null_resource" "invoke_lambda" {
 
 resource "null_resource" "install_packages" {
   provisioner "local-exec" {
-    command     = "pip install -r requirements.txt -t source/"
+    command     = "pip install -r /home/app/aws/assessment/requirements.txt -t pre-transition-validator/source/"
   }
 }
