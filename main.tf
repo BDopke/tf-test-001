@@ -1,21 +1,21 @@
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
-    actions   = [
+    actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
-      ]
+    ]
     effect    = "Allow"
     resources = ["arn:aws:logs:${var.region}:${var.account_id}:*"]
   }
 
   statement {
-    actions   = [
+    actions = [
       "ec2:CreateNetworkInterface",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DeleteNetworkInterface"
     ]
-    effect   = "Allow"
+    effect    = "Allow"
     resources = ["*"]
   }
 }
@@ -26,7 +26,7 @@ resource "aws_iam_policy" "policy" {
 }
 
 resource "aws_iam_role" "role" {
-  name               = "PreOnboardingValidatorRole"
+  name = "PreOnboardingValidatorRole"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -45,7 +45,7 @@ resource "aws_iam_role_policy_attachment" "policy_attachment" {
 }
 
 data "archive_file" "package" {
-  depends_on = [ null_resource.install_packages ]
+  depends_on  = [null_resource.install_packages]
   type        = "zip"
   source_dir  = "source"
   output_path = "payload.zip"
@@ -83,12 +83,12 @@ resource "null_resource" "invoke_lambda" {
   depends_on = [aws_lambda_function.lambda]
 
   provisioner "local-exec" {
-    command     = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --invocation-type Event --log-type Tail --output json output.json"
+    command = "aws lambda invoke --function-name ${aws_lambda_function.lambda.function_name} --invocation-type Event --log-type Tail --region ${var.region} --output json output.json"
   }
 }
 
 resource "null_resource" "install_packages" {
   provisioner "local-exec" {
-    command     = "pip install -r source/requirements.txt -t source/"
+    command = "pip install -r source/requirements.txt -t source/"
   }
 }
